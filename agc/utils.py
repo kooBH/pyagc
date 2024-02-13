@@ -46,14 +46,14 @@ def fft2melmx(nfft, sr=8000., nfilts=None, width=1., minfrq=0., maxfrq=None, htk
         loslope = (fftfrqs - fs[0]) / (fs[1] - fs[0])
         hislope = (fs[2] - fftfrqs) / (fs[2] - fs[1])
         # .. then intersect them with each other and zero
-        wts[i, :nfft / 2 + 1] = np.maximum(0, np.minimum(loslope, hislope))
+        wts[i, :int(nfft / 2) + 1] = np.maximum(0, np.minimum(loslope, hislope))
 
     if not constamp:
         # Slaney-style mel is scaled to be approx constant E per channel
         wts = np.dot(np.diag(2. / (binfrqs[2:nfilts + 2] - binfrqs[:nfilts])), wts)
 
     # Make sure 2nd half of FFT is zero
-    wts[:, (nfft / 2 + 2):] = 0
+    wts[:, int(nfft / 2 + 2):] = 0
     # seems like a good idea to avoid aliasing
 
     return (wts, binfrqs)

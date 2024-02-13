@@ -5,8 +5,8 @@ as described in http://labrosa.ee.columbia.edu/matlab/tf_agc/
 import numpy as np
 import scipy.signal as signal
 
-from utils import fft2melmx
-from stft import stft, istft
+from agc.utils import fft2melmx
+from agc.stft import stft, istft
 
 
 def tf_agc(d, sr, t_scale=0.5, f_scale=1.0, causal_tracking=True, plot=False):
@@ -29,7 +29,7 @@ def tf_agc(d, sr, t_scale=0.5, f_scale=1.0, causal_tracking=True, plot=False):
     # Make STFT on ~32 ms grid
     ftlen = int(2 ** np.round(np.log(hop_size * sr) / np.log(2.)))
     winlen = ftlen
-    hoplen = winlen / 2
+    hoplen = int(winlen / 2)
     D = stft(d, winlen, hoplen)  # using my code
     ftsr = sr / hoplen
     ndcols = D.shape[1]
@@ -40,7 +40,7 @@ def tf_agc(d, sr, t_scale=0.5, f_scale=1.0, causal_tracking=True, plot=False):
     nbands = max(10, 20 / f_scale)  # 10 bands, or more for very fine f_scale
     mwidth = f_scale * nbands / 10  # will be 2.0 for small f_scale
     (f2a_tmp, _) = fft2melmx(ftlen, sr, int(nbands), mwidth)
-    f2a = f2a_tmp[:, :ftlen / 2 + 1]
+    f2a = f2a_tmp[:, :int(ftlen / 2) + 1]
     audgram = np.dot(f2a, np.abs(D))
 
     if causal_tracking:
@@ -81,20 +81,5 @@ def tf_agc(d, sr, t_scale=0.5, f_scale=1.0, causal_tracking=True, plot=False):
 
     # invert back to waveform
     y = istft(D / E, winlen, hoplen, window=np.ones(winlen))  # using my code
-
-    if plot:
-        try:
-            import matplotlib.pyplot as plt
-            plt.subplot(3, 1, 1)
-            plt.imshow(20. * np.log10(np.flipud(np.abs(D))))
-            plt.subplot(3, 1, 2)
-            plt.imshow(20. * np.log10(np.flipud(np.abs(E))))
-            A = stft(y, winlen, hoplen)  # using my code
-            plt.subplot(3, 1, 3)
-            plt.imshow(20. * np.log10(np.flipud(np.abs(A))))
-            plt.show()
-        except Exception, e:
-            print "Failed to plot results"
-            print e
 
     return (y, D, E)

@@ -32,7 +32,7 @@ def stft(x, frame_size, hop_size=None, window=None, N=None, only_positive_freqs=
 
     # if requested, remove the "negative frequencies"
     if only_positive_freqs:
-        X = X[:N / 2 + 1, :]
+        X = X[:int(N / 2) + 1, :]
 
     return X
 
@@ -74,42 +74,3 @@ def istft(X, frame_size, hop_size=None, window=None, only_positive_freqs=True):
     return x
 
 
-if __name__ == '__main__':
-
-    import scipy.io.wavfile
-
-    sr, d = scipy.io.wavfile.read('../speech.wav')
-
-    # convert from int16 to float (-1,1) range
-    convert_16_bit = float(2 ** 15)
-    d = d / (convert_16_bit + 1.0)
-
-    # Make STFT on ~32 ms grid
-    M = int(2 ** np.round(np.log(0.032 * sr) / np.log(2.)))
-    D = stft(d, M)
-
-    # take ISFTF
-    x = istft(D, M)
-
-    try:
-        import matplotlib.pyplot as plt
-
-        plt.figure(1)
-        X = abs(D) - np.min(np.min(np.abs(D)))
-        X = X / np.max(np.max(X))
-        img = plt.imshow(np.flipud(X))
-        img.set_cmap('spectral')
-        plt.colorbar()
-
-        plt.figure(2)
-        plt.plot(d)
-        plt.hold(True)
-        plt.plot(x)
-        plt.show()
-    except Exception, e:
-        print e
-        print "Failed to plot results"
-
-    # convert back to int16 to save as WAV
-    x = np.int16(x * convert_16_bit)
-    scipy.io.wavfile.write('../speech_recons.wav', sr, x)

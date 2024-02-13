@@ -1,7 +1,9 @@
+import scipy.io.wavfile
+import numpy as np
+from agc.agc import tf_agc
+
 if __name__ == '__main__':
-    import scipy.io.wavfile
-    import numpy as np
-    from agc import tf_agc
+
 
     # read audiofile
     sr, d = scipy.io.wavfile.read('speech.wav')
